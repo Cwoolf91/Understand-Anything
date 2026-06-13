@@ -233,7 +233,10 @@ export class DartExtractor implements LanguageExtractor {
           this.extractTopLevelFunction(node, functions, exports);
           break;
         case "class_definition":
-          this.extractClassDefinition(node, classes, functions, exports);
+          this.extractClassLikeDeclaration(node, "class_body", classes, functions, exports);
+          break;
+        case "mixin_declaration":
+          this.extractClassLikeDeclaration(node, "class_body", classes, functions, exports);
           break;
       }
     }
@@ -261,8 +264,19 @@ export class DartExtractor implements LanguageExtractor {
     }
   }
 
-  private extractClassDefinition(
+  /**
+   * Extract a class-like declaration that uses a `class_body`-shaped member
+   * container. Used by `class_definition`, `mixin_declaration`, and (Task 8)
+   * `extension_declaration`. The only difference between these shapes is the
+   * body's node type name, which is passed in via `bodyNodeType`.
+   *
+   * Anonymous variants (e.g. `extension on Foo` with no name) are handled by
+   * the caller — this method requires `declNode` to have a leading
+   * `identifier` child for the name.
+   */
+  private extractClassLikeDeclaration(
     declNode: TreeSitterNode,
+    bodyNodeType: string,
     classes: StructuralAnalysis["classes"],
     functions: StructuralAnalysis["functions"],
     exports: StructuralAnalysis["exports"],
@@ -274,7 +288,7 @@ export class DartExtractor implements LanguageExtractor {
     const methods: string[] = [];
     const properties: string[] = [];
 
-    const body = findChild(declNode, "class_body");
+    const body = findChild(declNode, bodyNodeType);
     if (body) {
       collectClassBody(body, methods, properties, functions, exports);
     }

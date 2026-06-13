@@ -190,4 +190,33 @@ describe("DartExtractor", () => {
       parser.delete();
     });
   });
+
+  describe("extractStructure - mixins", () => {
+    it("extracts a plain mixin as a class-like entry", () => {
+      const { tree, parser, root } = parse(`mixin Walker {
+  void walk() {}
+}
+`);
+      const result = extractor.extractStructure(root);
+
+      expect(result.classes).toHaveLength(1);
+      expect(result.classes[0].name).toBe("Walker");
+      expect(result.classes[0].methods).toContain("walk");
+      tree.delete();
+      parser.delete();
+    });
+
+    it("extracts a mixin with an `on` constraint", () => {
+      const { tree, parser, root } = parse(`mixin Runner on Walker {
+  void run() {}
+}
+`);
+      const result = extractor.extractStructure(root);
+
+      expect(result.classes[0].name).toBe("Runner");
+      expect(result.classes[0].methods).toContain("run");
+      tree.delete();
+      parser.delete();
+    });
+  });
 });
