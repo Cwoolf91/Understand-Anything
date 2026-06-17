@@ -200,9 +200,9 @@ Determine whether to run a full analysis or incremental update.
 Set up and verify the `.understandignore` file before scanning.
 
 1. Check if `$PROJECT_ROOT/.understand-anything/.understandignore` exists.
-2. **If it does NOT exist**, generate a starter file by invoking the bundled script (delegates to `generateStarterIgnoreFile` in `@understand-anything/core`, which reads `.gitignore`, deduplicates against built-in defaults, and emits language-grouped test-file suggestions):
+2. **If it does NOT exist**, generate a starter file by invoking the bundled script (delegates to `generateStarterIgnoreFile` in `@understand-anything/core`, which reads `.gitignore`, deduplicates against built-in defaults, and emits language-grouped test-file suggestions). Pass `$PLUGIN_ROOT` via the env so the script doesn't have to re-derive it from its own path (which breaks for copied skill installs):
      ```bash
-     node <SKILL_DIR>/generate-ignore.mjs $PROJECT_ROOT
+     PLUGIN_ROOT="$PLUGIN_ROOT" node <SKILL_DIR>/generate-ignore.mjs $PROJECT_ROOT
      ```
    - Report to the user:
      > Generated `.understand-anything/.understandignore` with suggested exclusions based on your project structure. Please review it and uncomment any patterns you'd like to exclude from analysis. When ready, confirm to continue.
