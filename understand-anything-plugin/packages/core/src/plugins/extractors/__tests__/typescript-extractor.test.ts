@@ -62,6 +62,8 @@ describe("TypeScriptExtractor", () => {
       const repo = result.classes.find((c) => c.name === "Repository");
       expect(repo).toBeDefined();
       expect(repo!.methods).toContain("save");
+      // abstract method signatures (no body) are captured too
+      expect(repo!.methods).toContain("find");
 
       tree.delete();
       parser.delete();
