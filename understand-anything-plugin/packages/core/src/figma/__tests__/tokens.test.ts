@@ -33,3 +33,34 @@ describe("extractTokens", () => {
     ]));
   });
 });
+
+describe("extractTokens — nested styled layers", () => {
+  // The common real-world case: a screen's visible styling lives on a nested
+  // TEXT/RECTANGLE leaf, so the style reference is on 11:0 — NOT on the screen
+  // frame (10:0) that is the structural node.
+  const nestedDoc: FigmaDocument = {
+    name: "MyApp",
+    document: {
+      id: "0:0", name: "Document", type: "DOCUMENT", children: [
+        { id: "1:0", name: "Home", type: "CANVAS", children: [
+          { id: "10:0", name: "Home Screen", type: "FRAME", children: [
+            { id: "11:0", name: "Title", type: "TEXT", styles: { text: "T_KEY" }, children: [] },
+          ] },
+        ] },
+      ],
+    },
+  };
+  const nestedStyles: FigmaStyles = { meta: { styles: [{ key: "T_KEY", name: "type/heading", style_type: "TEXT" }] } };
+  const nestedStructural: GraphNode[] = [
+    { id: "screen:10:0", type: "screen", name: "Home Screen", summary: "Home Screen", tags: ["screen"], complexity: "simple", figmaMeta: { fileKey: "ABC", nodeId: "10:0" } },
+  ];
+
+  it("attributes nested-layer token usage to the nearest structural ancestor (screen)", () => {
+    const { nodes, edges } = extractTokens(nestedDoc, nestedStyles, nestedStructural, "ABC");
+    const token = nodes.find((n) => n.type === "token");
+    expect(token).toBeTruthy();
+    expect(edges).toEqual(expect.arrayContaining([
+      expect.objectContaining({ source: "screen:10:0", target: token!.id, type: "uses_token" }),
+    ]));
+  });
+});

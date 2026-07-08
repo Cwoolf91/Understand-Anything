@@ -39,8 +39,13 @@ export function extractTokens(
   }
 
   const usesSeen = new Set<string>();
-  function walk(n: FigmaNode) {
-    const consumerId = graphIdByFigmaId.get(n.id);
+  function walk(n: FigmaNode, nearestConsumerId: string | undefined) {
+    // Styles (fills/text/effect/grid) are usually applied to nested leaf
+    // layers (TEXT/RECTANGLE/…), not to the shallow structural node itself.
+    // Attribute a styled node's token usage to the nearest structural
+    // ancestor (screen/component/componentSet/instance/page) so real consumer
+    // relationships aren't dropped when the styled layer isn't itself a node.
+    const consumerId = graphIdByFigmaId.get(n.id) ?? nearestConsumerId;
     if (consumerId && n.styles) {
       for (const styleKey of Object.values(n.styles)) {
         const tokenId = tokenByStyleKey.get(styleKey);
@@ -53,9 +58,9 @@ export function extractTokens(
         }
       }
     }
-    for (const c of n.children ?? []) walk(c);
+    for (const c of n.children ?? []) walk(c, consumerId);
   }
-  walk(doc.document);
+  walk(doc.document, undefined);
 
   return { nodes, edges };
 }
